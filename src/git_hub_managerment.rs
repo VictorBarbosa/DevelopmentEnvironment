@@ -1,20 +1,27 @@
-use std::{ascii::AsciiExt, env, process::Command, str::from_utf8};
+use std::{
+    process::{self, Command},
+    str::from_utf8,
+};
 
-pub struct GitHubManagement<'a> {
-    current_branch: &'a str,
+pub struct GitHubManagement {
+    pub current_branch: String,
 }
 
-impl<'a> GitHubManagement<'a> {
-    pub fn new() -> GitHubManagement<'a> {
-        let current = Command::new("sh").arg("git branch --show-current").output();
-
+impl GitHubManagement {
+    pub fn new() -> GitHubManagement {
+        let current = Command::new("git")
+            .arg("branch")
+            .arg("--show-current")
+            .output();
+        let mut current_branch: String = "".to_string();
         match current {
-            Ok(mut output) => {
-                if (output.stderr.len() > 0) {
+            Ok(output) => {
+                if output.stderr.len() > 0 {
                     let error_msg = from_utf8(&output.stderr).unwrap();
                     println!("Error,{:#?}", error_msg);
+                    process::exit(1);
                 } else {
-                    println!("{:#?}", output)
+                    current_branch = format!("{}", from_utf8(&output.stdout).unwrap());
                 }
             }
             erro => {
@@ -22,6 +29,8 @@ impl<'a> GitHubManagement<'a> {
             }
         }
 
-        Self { current_branch: "" }
+        Self {
+            current_branch: current_branch,
+        }
     }
 }
